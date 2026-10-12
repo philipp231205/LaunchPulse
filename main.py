@@ -64,7 +64,7 @@ def get_launches_by_id(launch_id: int) -> dict:
 	else: return {"status": "FAILED"}
 
 @app.post("/launches/create")
-def create_launch(payload: launch_create):
+def create_launch(payload: launch_create) -> dict:
 
 	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 		conn.execute(
@@ -82,7 +82,7 @@ def create_launch(payload: launch_create):
 	return payload
 
 @app.put("/launches/update")
-def update_launch(payload: launch_update):
+def update_launch(payload: launch_update) -> dict:
 
 	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 		conn.execute(
@@ -99,3 +99,13 @@ def update_launch(payload: launch_update):
 		)
 
 	return payload
+
+@app.delete("/launches/delete/{launch_id}")
+def delete_launch(launch_id: int) -> dict:
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		conn.execute(
+			"DELETE FROM launches WHERE id = %s", (launch_id,)
+		)
+
+	return {"status": "SUCCESS"}
