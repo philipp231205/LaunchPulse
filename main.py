@@ -26,6 +26,14 @@ class launch_create(BaseModel):
 	is_crewed: bool
 	webcast_url: str
 
+class launch_update(BaseModel):
+	id: int
+	rocket: str
+	provider: str
+	launch_time: datetime
+	status: str
+	is_crewed: bool
+	webcast_url: str
 
 
 @app.get("/health")
@@ -71,5 +79,23 @@ def create_launch(payload: launch_create):
 			}
 		)
 
+	return payload
+
+@app.put("/launches/update")
+def update_launch(payload: launch_update):
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		conn.execute(
+			"UPDATE launches SET rocket = %(rocket)s, provider = %(provider)s, launch_time = %(launch_time)s, status = %(status)s, is_crewed = %(is_crewed)s, webcast_url = %(webcast_url)s WHERE id = %(id)s",
+			{
+				"rocket":  payload.rocket,
+				"provider": payload.provider,
+				"launch_time": payload.launch_time,
+				"status": payload.status,
+				"is_crewed": payload.is_crewed,
+				"webcast_url": payload.webcast_url,
+				"id": payload.id
+			}
+		)
 
 	return payload
