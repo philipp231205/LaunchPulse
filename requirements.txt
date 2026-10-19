@@ -2,3 +2,5 @@ fastapi
 dotenv
 psycopg
 uvicorn
+asyncio
+typing

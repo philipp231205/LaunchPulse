@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>LaunchPulse alerts</title>
+</head>
+<body>
+  <h1>Live launch alerts</h1>
+  <p id="status">connecting…</p>
+  <ul id="list"></ul>
+  <script>
+    const status = document.getElementById("status");
+    const list = document.getElementById("list");
+    // Same origin as the API, so no CORS setup needed.
+    const source = new EventSource("/alerts/stream");
+
+    source.addEventListener("open", () => {
+      status.textContent = "connected";
+    });
+    source.addEventListener("error", () => {
+      status.textContent = "disconnected — EventSource will retry";
+    });
+    source.addEventListener("launch_created", (e) => {
+      const launch = JSON.parse(e.data);
+      const li = document.createElement("li");
+      li.textContent = `#${launch.id} ${launch.rocket} (${launch.status})`;
+      list.prepend(li);
+    });
+  </script>
+</body>
+</html>

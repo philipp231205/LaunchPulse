@@ -5,7 +5,15 @@ from dotenv import load_dotenv
 import psycopg
 from psycopg.rows import dict_row
 
+from app.broadcaster import broadcaster
+
 app = FastAPI()
+
+from fastapi.staticfiles import StaticFiles
+from app.routes import alerts
+
+app.include_router(alerts.router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 load_dotenv()
 
@@ -67,8 +75,8 @@ def get_launches_by_id(launch_id: int) -> dict:
 def create_launch(payload: launch_create) -> dict:
 
 	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		conn.execute(
-			"INSERT INTO launches (rocket, provider, launch_time, status, is_crewed, webcast_url) VALUES (%(rocket)s, %(provider)s, %(launch_time)s, %(status)s, %(is_crewed)s, %(webcast_url)s)",
+		launch = conn.execute(
+			"INSERT INTO launches (rocket, provider, launch_time, status, is_crewed, webcast_url) VALUES (%(rocket)s, %(provider)s, %(launch_time)s, %(status)s, %(is_crewed)s, %(webcast_url)s) RETURNING *",
 			{
 				"rocket":  payload.rocket,
 				"provider": payload.provider,
@@ -77,9 +85,13 @@ def create_launch(payload: launch_create) -> dict:
 				"is_crewed": payload.is_crewed,
 				"webcast_url": payload.webcast_url
 			}
-		)
+		).fetchone()
 
-	return payload
+		conn.commit()
+
+	broadcaster.publish(launch)
+
+	return launch
 
 @app.put("/launches/update")
 def update_launch(payload: launch_update) -> dict:
