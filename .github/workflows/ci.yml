@@ -1,34 +1,49 @@
-# .github/workflows/ci.yml
-name: CI                      # the name shown in the Actions tab
+name: CI
 
-on:                           # triggers: when should this run?
+on:
   push:
-    branches: [master]          # every push to main
+    branches: [main]
   pull_request:
-    branches: [master]          # every PR that targets main
+    branches: [main]
 
 jobs:
-  test:                       # the job's id; you choose the name
-    runs-on: ubuntu-latest    # a fresh Ubuntu Linux machine from GitHub
-    env:                      # env vars for every step in this job
-      # app/db.py needs DATABASE_URL to exist on import; /health never connects to it
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:                      # name of the service container
+        image: postgres:17           # same Postgres version as your Compose file
+        env:                         # test-only credentials, thrown away after the run
+          POSTGRES_USER: launchpulse
+          POSTGRES_PASSWORD: devpassword
+          POSTGRES_DB: launchpulse
+        ports:
+          - 5432:5432                # runner port 5432 -> container port 5432
+        options: >-                  # wait until Postgres accepts connections
+          --health-cmd "pg_isready -U launchpulse -d launchpulse"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
       DATABASE_URL: postgresql://launchpulse:devpassword@127.0.0.1:5432/launchpulse
 
     steps:
       - name: Check out the code
-        uses: actions/checkout@v7       # copies your repo onto the runner
+        uses: actions/checkout@v7
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v7   # installs that Python version
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.12"        # in quotes, so YAML doesn't treat it as a number
-          cache: pip                    # reuse downloaded packages between runs (faster)
+          python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt   # pytest is in requirements.txt
+        run: pip install -r requirements.txt
 
+      # Run db/schema.sql with psycopg (already installed), so we don't depend on psql
       - name: Create the launches table
         run: python -c "import os, psycopg; psycopg.connect(os.environ['DATABASE_URL'], autocommit=True).execute(open('db/schema.sql').read())"
 
       - name: Run tests
-        run: pytest -q                  # any failing test fails the step and turns the run red
+        run: pytest -q
