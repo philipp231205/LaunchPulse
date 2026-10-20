@@ -4,3 +4,5 @@ psycopg
 uvicorn
 asyncio
 typing
+pytest
+httpx2
