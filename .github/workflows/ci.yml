@@ -3,9 +3,9 @@ name: CI                      # the name shown in the Actions tab
 
 on:                           # triggers: when should this run?
   push:
-    branches: [main]          # every push to main
+    branches: [master]          # every push to main
   pull_request:
-    branches: [main]          # every PR that targets main
+    branches: [master]          # every PR that targets main
 
 jobs:
   test:                       # the job's id; you choose the name
