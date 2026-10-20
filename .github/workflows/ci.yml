@@ -27,5 +27,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt   # pytest is in requirements.txt
 
+      - name: Create the launches table
+        run: python -c "import os, psycopg; psycopg.connect(os.environ['DATABASE_URL'], autocommit=True).execute(open('db/schema.sql').read())"
+
       - name: Run tests
         run: pytest -q                  # any failing test fails the step and turns the run red
