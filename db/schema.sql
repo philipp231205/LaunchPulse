@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS locations (
 	id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name text NOT NULL,
 	country text NOT NULL,
-	region text NOT NULL,
+	region text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS launchpads (
