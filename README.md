@@ -1,33 +1,62 @@
-# Launchpulse
+# LaunchPulse
 
-Launchpulse is an API endpoint that provides data about rocket & related subjects.
+LaunchPulse is a FastAPI service that stores rocket launches in Postgres and pushes live updates over Server-Sent Events (SSE).
 
-## How to start
+**Stack:** FastAPI · Postgres 17 · Docker Compose · SSE · pytest · GitHub Actions
 
-Launchpulse uses Docker.
+## Quick start
 
-'docker compose up' to start the application.
+1. Copy the example below into a `.env` file in the project root (Docker Compose reads these for Postgres):
 
-## Endpoints
+```env
+POSTGRES_USER=launchpulse
+POSTGRES_PASSWORD=launchpulse
+POSTGRES_DB=launchpulse
+```
 
-Endpoints are being changed constantly.
+2. Start the stack:
 
-/health : Check if the application is running
+```bash
+docker compose up --build
+```
 
-/launches : Get a list of all launches currently stored in the database
+3. Open the API at [http://localhost:8000](http://localhost:8000)  
+   Interactive docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-/launches/{id} : Get data about a specific launch with given id
+Postgres is also exposed on host port `5433` if you want to inspect it with a local client.
 
-/launches/create : Create a new launch
+## API
 
-/launches/update : Updates a launch
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/launches` | List all launches |
+| `GET` | `/launches/{id}` | Get one launch by id |
+| `POST` | `/launches/create` | Create a launch |
+| `PUT` | `/launches/update` | Update a launch |
+| `DELETE` | `/launches/delete/{id}` | Delete a launch |
+| `GET` | `/alerts/stream` | Live SSE stream of launch create events |
 
-/launches/delete : Deletes a launch
+A small demo page for the stream lives at `/static/alerts.html`.
 
-/alerts/stream : Get live updates about any new launches being created. Works with SSE
+## Project layout
 
-## Future updates
+```
+app/           # SSE broadcaster and alert routes
+db/            # SQL schema and seed scripts
+static/        # Static demo pages
+tests/         # pytest
+main.py        # FastAPI app and launch CRUD routes
+docker-compose.yml
+Dockerfile
+```
 
-Currently working on expanding the database to include more information. Updates on endpoints will follow soon.
+## Development
 
-Github actions are currently failing because the endpoints are not yet updated to the new schema.
+With the same `.env` and Compose stack running:
+
+```bash
+pytest
+```
+
+CI runs these checks on every push via GitHub Actions.
