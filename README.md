@@ -29,3 +29,5 @@ Endpoints are being changed constantly.
 ## Future updates
 
 Currently working on expanding the database to include more information. Updates on endpoints will follow soon.
+
+Github actions are currently failing because the endpoints are not yet updated to the new schema.
