@@ -55,68 +55,98 @@ def get_health(response: Response):
 
 # Gets all rows in organisations table
 @app.get("/organisations")
-def get_organisations() -> dict:
+def get_organisations(response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		rows = conn.execute(
-			"SELECT * FROM organisations ORDER BY name"
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM organisations ORDER BY name"
+			).fetchall()
 
-	result = {row["id"]: row for row in rows}
+		result = {row["id"]: row for row in rows}
 
-	return result
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Gets all rows in locations table
 @app.get("/locations")
-def get_locations() -> dict:
+def get_locations(response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		rows = conn.execute(
-			"SELECT * FROM locations ORDER BY name"
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM locations ORDER BY name"
+			).fetchall()
 
-	result = {row["id"]: row for row in rows}
+		result = {row["id"]: row for row in rows}
 
-	return result
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Gets all rows in launchpads table
 @app.get("/launchpads")
-def get_launchpads() -> dict:
+def get_launchpads(response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		rows = conn.execute(
-			"SELECT * FROM launchpads ORDER BY name"
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM launchpads ORDER BY name"
+			).fetchall()
 
-	result = {row["id"]: row for row in rows}
+		result = {row["id"]: row for row in rows}
 
-	return result
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Gets all rows in vehicles table
 @app.get("/vehicles")
-def get_vehicles() -> dict:
+def get_vehicles(response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		rows = conn.execute(
-			"SELECT * FORM vehicles ORDER BY name"
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM vehicles ORDER BY name"
+			).fetchall()
 
-	result = {row["id"]: row for row in rows}
+		result = {row["id"]: row for row in rows}
 
-	return result
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Gets all rows in launches table
 @app.get("/launches")
-def get_launches() -> dict:
+def get_launches(response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		rows = conn.execute(
-			"SELECT * FROM launches ORDER BY launch_time"
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM launches ORDER BY date"
+			).fetchall()
 
-	result = {row["id"]: row for row in rows}
+		result = {row["id"]: row for row in rows}
 
-	return result
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 @app.get("/launches/{launch_id}")
 def get_launches_by_id(launch_id: int) -> dict:
