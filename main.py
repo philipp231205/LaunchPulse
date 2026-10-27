@@ -50,8 +50,8 @@ def get_health(response: Response):
 	response.status_code = status.HTTP_200_OK
 	return
 
-# Endpoints to get all data in the specified table
 
+# Endpoints to get all data in the specified table
 
 # Gets all rows in organisations table
 @app.get("/organisations")
@@ -148,16 +148,93 @@ def get_launches(response: Response) -> dict:
 		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		return
 
+
+# Endpoints to get 1 row with a given id
+
+# Gets row by id for organisations
+@app.get("/organisations/{organisation_id}")
+def get_organisations_by_id(organisation_id: int, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM organisations WHERE id = %s", (organisation_id,)
+			).fetchall()
+
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
+
+# Gets row by id for locations
+@app.get("/locations/{location_id}")
+def get_locations_by_id(location_id: int, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM locations WHERE id = %s", (location_id,)
+			).fetchall()
+
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
+
+# Gets row by id for launchpads
+@app.get("/launchpads/{launchpad_id}")
+def get_launchpads_by_id(launchpad_id: int, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM launchpads WHERE id = %s", (launchpad_id,)
+			).fetchall()
+
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
+
+# Gets row by id for vehicles
+@app.get("/vehicles/{vehicle_id}")
+def get_vehicels_by_id(vehicle_id: int, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM vehicles WHERE id = %s", (vehicle_id,)
+			).fetchall()
+
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
+
+# Gets row by id fpr launches
 @app.get("/launches/{launch_id}")
-def get_launches_by_id(launch_id: int) -> dict:
+def get_launches_by_id(launch_id: int, response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		row = conn.execute(
-			"SELECT * FROM launches WHERE id = %s", (launch_id,)
-		).fetchall()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM launches WHERE id = %s", (launch_id,)
+			).fetchall()
 
-	if len(row) > 0: return row[0]
-	else: return {"status": "FAILED"}
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
 
 @app.post("/launches/create")
 def create_launch(payload: launch_create) -> dict:
