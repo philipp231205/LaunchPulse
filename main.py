@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 import os
 from dotenv import load_dotenv
 
@@ -30,7 +30,7 @@ class launch_create(BaseModel):
 	rocket: str
 	provider: str
 	launch_time: datetime
-	status: Status = "upcoming"
+	status: str
 	is_crewed: bool
 	webcast_url: str
 
@@ -44,10 +44,68 @@ class launch_update(BaseModel):
 	webcast_url: str
 
 
+# Endpoint to check the health of the API
 @app.get("/health")
-def get_health() -> dict[str, str]:
-	return {"status": "UP"}
+def get_health(response: Response):
+	response.status_code = status.HTTP_200_OK
+	return
 
+# Endpoints to get all data in the specified table
+
+
+# Gets all rows in organisations table
+@app.get("/organisations")
+def get_organisations() -> dict:
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		rows = conn.execute(
+			"SELECT * FROM organisations ORDER BY name"
+		).fetchall()
+
+	result = {row["id"]: row for row in rows}
+
+	return result
+
+# Gets all rows in locations table
+@app.get("/locations")
+def get_locations() -> dict:
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		rows = conn.execute(
+			"SELECT * FROM locations ORDER BY name"
+		).fetchall()
+
+	result = {row["id"]: row for row in rows}
+
+	return result
+
+# Gets all rows in launchpads table
+@app.get("/launchpads")
+def get_launchpads() -> dict:
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		rows = conn.execute(
+			"SELECT * FROM launchpads ORDER BY name"
+		).fetchall()
+
+	result = {row["id"]: row for row in rows}
+
+	return result
+
+# Gets all rows in vehicles table
+@app.get("/vehicles")
+def get_vehicles() -> dict:
+
+	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		rows = conn.execute(
+			"SELECT * FORM vehicles ORDER BY name"
+		).fetchall()
+
+	result = {row["id"]: row for row in rows}
+
+	return result
+
+# Gets all rows in launches table
 @app.get("/launches")
 def get_launches() -> dict:
 
