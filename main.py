@@ -402,12 +402,90 @@ def update_launch(payload: launch_update) -> dict:
 
 	return payload
 
+
+# Endpoints to delete rows by id
+
+# Deletes organisation by id
+@app.delete("/organisations/delete/{organisation_id}")
+def delete_organisation(organisation_id: int, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM organisations WHERE id = %s", (organisation_id,)
+			)
+
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Deletes location by id
+@app.delete("/locations/delete/{location_id}")
+def delete_location(location_id: int, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM locations WHERE id = %s", (location_id,)
+			)
+
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Deletes launchpad by id
+@app.delete("/launchpads/delete/{launchpad_id}")
+def delete_launchpad(launchpad_id: int, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM launchpads WHERE id = %s", (launchpad_id,)
+			)
+
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Deletes vehicle by id
+@app.delete("/vehicles/delete/{vehicle_id}")
+def delete_vehicle(vehicle_id: int, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM vehicles WHERE id = %s", (vehicle_id,)
+			)
+
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Deletes launch by id
 @app.delete("/launches/delete/{launch_id}")
-def delete_launch(launch_id: int) -> dict:
+def delete_launch(launch_id: int, response: Response):
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		conn.execute(
-			"DELETE FROM launches WHERE id = %s", (launch_id,)
-		)
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM launches WHERE id = %s", (launch_id,)
+			)
 
-	return {"status": "SUCCESS"}
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
