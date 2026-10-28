@@ -19,6 +19,10 @@ load_dotenv()
 
 DB_CONNECTION = os.getenv("DATABASE_URL")
 
+from models.organisation import organisation
+from models.location import location
+from models.launchpad import launchpad
+from models.vehicle import vehicle
 from models.launch import launch
 
 
@@ -231,12 +235,122 @@ def get_launches_by_id(launch_id: int, response: Response) -> dict:
 # Create endpoints for all tables
 
 # Creates a new organisation
+@app.post("/organisations/create")
+def create_organisation(payload: organisation, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			organisation = conn.execute(
+				"INSERT INTO organisations (name, country, type, administrator, website) VALUES (%(name)s, %(country)s, %(type)s, %(administrator)s, %(website)s) RETURNING *",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"type": payload.type,
+					"administrator": payload.administrator,
+					"website": payload.website
+				}
+			).fetchone()
+
+			conn.commit()
+
+		broadcaster.publish(organisation)
+
+		response.status_code = status.HTTP_201_CREATED
+		return organisation
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Creates a new location
+@app.post("/locations/create")
+def create_location(payload: location, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			location = conn.execute(
+				"INSERT INTO locations (name, country, region) VALUES (%(name)s, %(country)s, %(region)s) RETURNING *",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"region": payload.region
+				}
+			).fetchone()
+
+			conn.commit()
+
+		broadcaster.publish(location)
+
+		response.status_code = status.HTTP_201_CREATED
+		return location
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 # Creates a new launchpad
+@app.post("/launchpads/create")
+def create_launchpad(payload: launchpad, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			launchpad = conn.execute(
+				"INSERT INTO launchpads (name, longitude, latitude, status, organisation_id, location_id) VALUES (%(name)s, %(longitude)s, %(latitude)s, %(status)s, %(organisation_id)s, %(location_id)s) RETURNING *",
+				{
+					"name": payload.name,
+					"longitude": payload.longitude,
+					"latitude": payload.latitude,
+					"status": payload.status,
+					"organisation_id": payload.organisation_id,
+					"location_id": payload.location_id
+				}
+			).fetchone()
+
+			conn.commit()
+
+		broadcaster.publish(launchpad)
+
+		response.status_code = status.HTTP_201_CREATED
+		return launchpad
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Creates a new vehicle
+@app.post("/vehicles/create")
+def create_vehicle(payload: vehicle, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			vehicle = conn.execute(
+				"INSERT INTO vehicles (name, family, height_m, diameter_m, mass_kg, payload_leo_kg, payload_gto_kg, payload_sso_kg, stages, first_flight, thrust_kn, status, organisation_id) VALUES (%(name)s, %(family)s, %(height_m)s, %(diameter_m)s, %(mass_kg)s, %(payload_leo_kg)s, %(payload_gto_kg)s, %(payload_sso_kg)s, %(stages)s, %(first_flight)s, %(thrust_kn)s, %(status)s, %(organisation_id)s) RETURNING *",
+				{
+					"name": payload.name,
+					"family": payload.family,
+					"height_m": payload.height_m,
+					"diameter_m": payload.diameter_m,
+					"mass_kg": payload.mass_kg,
+					"payload_leo_kg": payload.payload_leo_kg,
+					"payload_gto_kg": payload.payload_gto_kg,
+					"payload_sso_kg": payload.payload_sso_kg,
+					"stages": payload.stages,
+					"first_flight": payload.first_flight,
+					"thrust_kn": payload.thrust_kn,
+					"status": payload.status,
+					"organisation_id": payload.organisation_id
+				}
+			).fetchone()
+
+			conn.commit()
+
+		broadcaster.publish(vehicle)
+
+		response.status_code = status.HTTP_201_CREATED
+		return vehicle
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Creates a new launch
 @app.post("/launches/create")
