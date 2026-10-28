@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS launchpads (
 	longitude NUMERIC(9,6) NOT NULL,
 	latitude NUMERIC(9,6) NOT NULL,
 	status text,
-	organisation_id bigint REFERENCES organisations(id),
-	location_id bigint REFERENCES locations(id)
+	organisation_id bigint REFERENCES organisations(id) NOT NULL,
+	location_id bigint REFERENCES locations(id) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
 	first_flight timestamptz,
 	thrust_kn NUMERIC(8,1),
 	status text,
-	organisation_id bigint REFERENCES organisations(id)
+	organisation_id bigint REFERENCES organisations(id) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS launches (
@@ -50,5 +50,5 @@ CREATE TABLE IF NOT EXISTS launches (
 	payload text,
 	vehicle_id bigint REFERENCES vehicles(id) NOT NULL,
 	launchpad_id bigint REFERENCES launchpads(id) NOT NULL,
-	organisation_id bigint REFERENCES organisations(id)
+	organisation_id bigint REFERENCES organisations(id) NOT NULL
 );

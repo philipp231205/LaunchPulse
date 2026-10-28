@@ -19,20 +19,11 @@ load_dotenv()
 
 DB_CONNECTION = os.getenv("DATABASE_URL")
 
+from models.launch import launch
+
+
 from datetime import datetime
-from typing import Literal
-
 from pydantic import BaseModel
-
-Status = Literal["upcoming", "launched", "scrubbed", "failed"]
-
-class launch_create(BaseModel):
-	rocket: str
-	provider: str
-	launch_time: datetime
-	status: str
-	is_crewed: bool
-	webcast_url: str
 
 class launch_update(BaseModel):
 	id: int
@@ -204,7 +195,7 @@ def get_launchpads_by_id(launchpad_id: int, response: Response) -> dict:
 
 # Gets row by id for vehicles
 @app.get("/vehicles/{vehicle_id}")
-def get_vehicels_by_id(vehicle_id: int, response: Response) -> dict:
+def get_vehicles_by_id(vehicle_id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
@@ -219,7 +210,7 @@ def get_vehicels_by_id(vehicle_id: int, response: Response) -> dict:
 		response.status_code = status.HTTP_404_NOT_FOUND
 		return
 
-# Gets row by id fpr launches
+# Gets row by id for launches
 @app.get("/launches/{launch_id}")
 def get_launches_by_id(launch_id: int, response: Response) -> dict:
 
@@ -236,27 +227,47 @@ def get_launches_by_id(launch_id: int, response: Response) -> dict:
 		response.status_code = status.HTTP_404_NOT_FOUND
 		return
 
+
+# Create endpoints for all tables
+
+# Creates a new organisation
+
+# Creates a new location
+
+# Creates a new launchpad
+
+# Creates a new vehicle
+
+# Creates a new launch
 @app.post("/launches/create")
-def create_launch(payload: launch_create) -> dict:
+def create_launch(payload: launch, response: Response) -> dict:
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		launch = conn.execute(
-			"INSERT INTO launches (rocket, provider, launch_time, status, is_crewed, webcast_url) VALUES (%(rocket)s, %(provider)s, %(launch_time)s, %(status)s, %(is_crewed)s, %(webcast_url)s) RETURNING *",
-			{
-				"rocket":  payload.rocket,
-				"provider": payload.provider,
-				"launch_time": payload.launch_time,
-				"status": payload.status,
-				"is_crewed": payload.is_crewed,
-				"webcast_url": payload.webcast_url
-			}
-		).fetchone()
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			launch = conn.execute(
+				"INSERT INTO launches (date, status, webcast_url, mission, payload, vehicle_id, launchpad_id, organisation_id) VALUES (%(date)s, %(status)s, %(webcast_url)s, %(mission)s, %(payload)s, %(vehicle_id)s, %(launchpad_id)s, %(organisation_id)s) RETURNING *",
+				{
+					"date": payload.date,
+					"status": payload.status,
+					"webcast_url": payload.webcast_url,
+					"mission": payload.mission,
+					"payload": payload.payload,
+					"vehicle_id": payload.vehicle_id,
+					"launchpad_id": payload.launchpad_id,
+					"organisation_id": payload.organisation_id
+				}
+			).fetchone()
 
-		conn.commit()
+			conn.commit()
 
-	broadcaster.publish(launch)
+		broadcaster.publish(launch)
 
-	return launch
+		response.status_code = status.HTTP_201_CREATED
+		return launch
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 @app.put("/launches/update")
 def update_launch(payload: launch_update) -> dict:
