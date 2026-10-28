@@ -308,10 +308,6 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 @app.post("/vehicles/create")
 def create_vehicle(payload: vehicle, response: Response) -> dict:
 
-	if payload.id == None:
-		response.status_code = status.HTTP_400_BAD_REQUEST
-		return
-
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			vehicle = conn.execute(
@@ -457,7 +453,7 @@ def update_vehicle(payload: vehicle, response: Response):
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organsation_id = %(organisation_id)s WHERE id = %(id)s",
+				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
 				{
 					"name": payload.name,
 					"family": payload.family,
