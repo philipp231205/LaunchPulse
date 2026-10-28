@@ -26,19 +26,6 @@ from models.vehicle import vehicle
 from models.launch import launch
 
 
-from datetime import datetime
-from pydantic import BaseModel
-
-class launch_update(BaseModel):
-	id: int
-	rocket: str
-	provider: str
-	launch_time: datetime
-	status: str
-	is_crewed: bool
-	webcast_url: str
-
-
 # Endpoint to check the health of the API
 @app.get("/health")
 def get_health(response: Response):
@@ -286,6 +273,7 @@ def create_location(payload: location, response: Response) -> dict:
 
 	except Exception:
 		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 # Creates a new launchpad
 @app.post("/launchpads/create")
@@ -319,6 +307,10 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 # Creates a new vehicle
 @app.post("/vehicles/create")
 def create_vehicle(payload: vehicle, response: Response) -> dict:
+
+	if payload.id == None:
+		response.status_code = status.HTTP_400_BAD_REQUEST
+		return
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
@@ -383,24 +375,141 @@ def create_launch(payload: launch, response: Response) -> dict:
 		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		return
 
+
+# Endpoints to update rows by id
+
+# Update organisation by id
+@app.put("/organisations/update")
+def update_organisation(payload: organisation, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"type": payload.type,
+					"administrator": payload.administrator,
+					"website": payload.website,
+					"id": payload.id
+				}
+			)
+
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Update location by id
+@app.put("/locations/update")
+def update_location(payload: location, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"region": payload.region,
+					"id": payload.id
+				}
+			)
+
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Update launchpad by id
+@app.put("/launchpads/update")
+def update_launchpad(payload: launchpad, response: Response):
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE launchpads SET name = %(name)s, longitude = %(longitude)s, latitude = %(latitude)s, status = %(status)s, organisation_id = %(organisation_id)s, location_id = %(location_id)s WHERE id = %(id)s",
+				{
+					"name": payload.name,
+					"longitude": payload.longitude,
+					"latitude": payload.latitude,
+					"status": payload.status,
+					"organisation_id": payload.organisation_id,
+					"location_id": payload.location_id,
+					"id": payload.id
+				}
+			)
+
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Update vehicle by id
+@app.put("/vehicles/update")
+def update_vehicle(payload: vehicle, response: Response):
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organsation_id = %(organisation_id)s WHERE id = %(id)s",
+				{
+					"name": payload.name,
+					"family": payload.family,
+					"height_m": payload.height_m,
+					"diameter_m": payload.diameter_m,
+					"mass_kg": payload.mass_kg,
+					"payload_leo_kg": payload.payload_leo_kg,
+					"payload_gto_kg": payload.payload_gto_kg,
+					"payload_sso_kg": payload.payload_sso_kg,
+					"stages": payload.stages,
+					"first_flight": payload.first_flight,
+					"thrust_kn": payload.thrust_kn,
+					"status": payload.status,
+					"organisation_id": payload.organisation_id,
+					"id": payload.id
+				}
+			)
+
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+# Update launch by id
 @app.put("/launches/update")
-def update_launch(payload: launch_update) -> dict:
+def update_launch(payload: launch, response: Response):
 
-	with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
-		conn.execute(
-			"UPDATE launches SET rocket = %(rocket)s, provider = %(provider)s, launch_time = %(launch_time)s, status = %(status)s, is_crewed = %(is_crewed)s, webcast_url = %(webcast_url)s WHERE id = %(id)s",
-			{
-				"rocket":  payload.rocket,
-				"provider": payload.provider,
-				"launch_time": payload.launch_time,
-				"status": payload.status,
-				"is_crewed": payload.is_crewed,
-				"webcast_url": payload.webcast_url,
-				"id": payload.id
-			}
-		)
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE launches SET date = %(date)s, status = %(status)s, webcast_url = %(webcast_url)s, mission = %(mission)s, payload = %(payload)s, vehicle_id = %(vehicle_id)s, launchpad_id = %(launchpad_id)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
+				{
+					"date": payload.date,
+					"status": payload.status,
+					"webcast_url": payload.webcast_url,
+					"mission": payload.mission,
+					"payload": payload.payload,
+					"vehicle_id": payload.vehicle_id,
+					"launchpad_id": payload.launchpad_id,
+					"organisation_id": payload.organisation_id,
+					"id": payload.id
+				}
+			)
 
-	return payload
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
 
 
 # Endpoints to delete rows by id

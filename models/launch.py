@@ -2,6 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class launch(BaseModel):
+	id: int | None = None
 	date: datetime
 	status: str | None = None
 	webcast_url: str | None = None
@@ -9,4 +10,4 @@ class launch(BaseModel):
 	payload: str | None = None
 	vehicle_id: int
 	launchpad_id: int
-	organisation_id: int
+	organisation_id: int | None = None
