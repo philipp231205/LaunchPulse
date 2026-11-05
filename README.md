@@ -1,5 +1,7 @@
 # LaunchPulse
 
+**Live Demo**: https://launchpulse-4dzs.onrender.com/docs
+
 LaunchPulse is a FastAPI service that stores rocket launches in Postgres and pushes live updates over Server-Sent Events (SSE).
 
 **Stack:** FastAPI · Postgres 17 · Docker Compose · SSE · pytest · GitHub Actions
