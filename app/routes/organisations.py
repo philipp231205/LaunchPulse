@@ -1,0 +1,124 @@
+from fastapi import APIRouter, Response, status
+
+from models.organisation import organisation
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+DB_CONNECTION = os.getenv("DATABASE_URL")
+
+import psycopg
+from psycopg.rows import dict_row
+
+router = APIRouter(prefix="/organisations", tags=["organisations"])
+
+# Gets all rows in organisations table
+@router.get("")
+def get_organisations(response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			rows = conn.execute(
+				"SELECT * FROM organisations ORDER BY name"
+			).fetchall()
+
+		result = {row["id"]: row for row in rows}
+
+		response.status_code = status.HTTP_200_OK
+		return result
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+
+# Gets row by id for organisations
+@router.get("/{id}")
+def get_organisations_by_id(id: int, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			row = conn.execute(
+				"SELECT * FROM organisations WHERE id = %s", (id,)
+			).fetchall()
+
+		response.status_code = status.HTTP_200_OK
+		return row[0]
+
+	except Exception:
+		response.status_code = status.HTTP_404_NOT_FOUND
+		return
+
+
+# Creates a new organisation
+@router.post("")
+def create_organisation(payload: organisation, response: Response) -> dict:
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			organisation = conn.execute(
+				"INSERT INTO organisations (name, country, type, administrator, website) VALUES (%(name)s, %(country)s, %(type)s, %(administrator)s, %(website)s) RETURNING *",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"type": payload.type,
+					"administrator": payload.administrator,
+					"website": payload.website
+				}
+			).fetchone()
+
+			conn.commit()
+
+		#broadcaster.publish(organisation)
+
+		response.status_code = status.HTTP_201_CREATED
+		return organisation
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+
+# Update organisation by id
+@router.put("")
+def update_organisation(payload: organisation, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
+				{
+					"name": payload.name,
+					"country": payload.country,
+					"type": payload.type,
+					"administrator": payload.administrator,
+					"website": payload.website,
+					"id": payload.id
+				}
+			)
+
+		response.status_code = status.HTTP_200_OK
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
+
+
+# Deletes organisation by id
+@router.delete("/{id}")
+def delete_organisation(id: int, response: Response):
+
+	try:
+		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+			conn.execute(
+				"DELETE FROM organisations WHERE id = %s", (id,)
+			)
+
+		response.status_code = status.HTTP_204_NO_CONTENT
+		return
+
+	except Exception:
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return
