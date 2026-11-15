@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from models.organisation import organisation
 from app.broadcaster import broadcaster
-from app.db import get_conn
+from app.db import get_conn,  ForeignKeyViolation
 
 router = APIRouter(prefix="/organisations", tags=["organisations"])
 
@@ -85,12 +85,16 @@ def update_organisation(id: int, payload: organisation):
 @router.delete("/{id}", status_code=204)
 def delete_organisation(id: int):
 
-	with get_conn() as conn:
-		cur = conn.execute(
-			"DELETE FROM organisations WHERE id = %s", (id,)
-		)
+	try:
+		with get_conn() as conn:
+			cur = conn.execute(
+				"DELETE FROM organisations WHERE id = %s", (id,)
+			)
 
-	if cur.rowcount == 0:
-		raise HTTPException(status_code=404, detail="organisation not found")
+		if cur.rowcount == 0:
+			raise HTTPException(status_code=404, detail="organisation not found")
 
-	return
+		return
+
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=409, detail="organisation still referenced")

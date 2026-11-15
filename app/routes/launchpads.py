@@ -95,12 +95,16 @@ def update_launchpad(id: int, payload: launchpad):
 @router.delete("/{id}", status_code=204)
 def delete_launchpad(id: int):
 
-	with get_conn() as conn:
-		cur = conn.execute(
-			"DELETE FROM launchpads WHERE id = %s", (id,)
-		)
+	try:
+		with get_conn() as conn:
+			cur = conn.execute(
+				"DELETE FROM launchpads WHERE id = %s", (id,)
+			)
 
-	if cur.rowcount == 0:
-		raise HTTPException(status_code=404, detail="launchpad not found")
-	
-	return
+		if cur.rowcount == 0:
+			raise HTTPException(status_code=404, detail="launchpad not found")
+		
+		return
+
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=409, detail="launchpad still referenced")

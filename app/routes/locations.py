@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from models.location import location
 from app.broadcaster import broadcaster
-from app.db import get_conn
+from app.db import get_conn, ForeignKeyViolation
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
@@ -80,12 +80,16 @@ def update_location(id: int, payload: location):
 @router.delete("/{id}", status_code=204)
 def delete_location(id: int):
 
-	with get_conn() as conn:
-		cur = conn.execute(
-			"DELETE FROM locations WHERE id = %s", (id,)
-		)
+	try:
+		with get_conn() as conn:
+			cur = conn.execute(
+				"DELETE FROM locations WHERE id = %s", (id,)
+			)
 
-	if cur.rowcount == 0:
-		raise HTTPException(status_code=404, detail="location not found")
-	
-	return
+		if cur.rowcount == 0:
+			raise HTTPException(status_code=404, detail="location not found")
+		
+		return
+
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=409, detail="location still referenced")
