@@ -1,7 +1,5 @@
 from fastapi import FastAPI, Response, status
 
-from app.broadcaster import broadcaster
-
 app = FastAPI(title="LaunchPulse", version="1.0.0")
 
 from fastapi.staticfiles import StaticFiles

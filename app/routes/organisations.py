@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Response, status, HTTPException
 
 from models.organisation import organisation
-from app import broadcaster
+from app.broadcaster import broadcaster
 from app.db import get_conn
 
 router = APIRouter(prefix="/organisations", tags=["organisations"])
@@ -28,20 +28,17 @@ def get_organisations(response: Response) -> dict:
 
 # Gets row by id for organisations
 @router.get("/{id}")
-def get_organisations_by_id(id: int, response: Response) -> dict:
+def get_organisations_by_id(id: int) -> dict:
 
-	try:
-		with get_conn() as conn:
-			row = conn.execute(
-				"SELECT * FROM organisations WHERE id = %s", (id,)
-			).fetchall()
+	with get_conn() as conn:
+		row = conn.execute(
+			"SELECT * FROM organisations WHERE id = %s", (id,)
+		).fetchone()
 
-		response.status_code = status.HTTP_200_OK
-		return row[0]
+	if row is None:
+		raise HTTPException(status_code=404, detail="organisation not found")
 
-	except Exception:
-		response.status_code = status.HTTP_404_NOT_FOUND
-		return
+	return row
 
 
 # Creates a new organisation
