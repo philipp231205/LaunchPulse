@@ -74,8 +74,8 @@ def create_organisation(payload: organisation, response: Response) -> dict:
 
 
 # Update organisation by id
-@router.put("")
-def update_organisation(payload: organisation, response: Response):
+@router.put("/{id}")
+def update_organisation(id: int, payload: organisation, response: Response):
 
 	try:
 		with get_conn() as conn:
@@ -87,7 +87,7 @@ def update_organisation(payload: organisation, response: Response):
 					"type": payload.type,
 					"administrator": payload.administrator,
 					"website": payload.website,
-					"id": payload.id
+					"id": id
 				}
 			)
 

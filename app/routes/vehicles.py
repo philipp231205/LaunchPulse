@@ -82,8 +82,8 @@ def create_vehicle(payload: vehicle, response: Response) -> dict:
 
 
 # Update vehicle by id
-@router.put("")
-def update_vehicle(payload: vehicle, response: Response):
+@router.put("/{id}")
+def update_vehicle(id: int, payload: vehicle, response: Response):
 	try:
 		with get_conn() as conn:
 			conn.execute(
@@ -102,7 +102,7 @@ def update_vehicle(payload: vehicle, response: Response):
 					"thrust_kn": payload.thrust_kn,
 					"status": payload.status,
 					"organisation_id": payload.organisation_id,
-					"id": payload.id
+					"id": id
 				}
 			)
 

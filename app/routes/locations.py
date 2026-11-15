@@ -72,8 +72,8 @@ def create_location(payload: location, response: Response) -> dict:
 		return
 
 # Update location by id
-@router.put("")
-def update_location(payload: location, response: Response):
+@router.put("/{id}")
+def update_location(id: int, payload: location, response: Response):
 
 	try:
 		with get_conn() as conn:
@@ -83,7 +83,7 @@ def update_location(payload: location, response: Response):
 					"name": payload.name,
 					"country": payload.country,
 					"region": payload.region,
-					"id": payload.id
+					"id": id
 				}
 			)
 

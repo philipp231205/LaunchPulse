@@ -78,8 +78,8 @@ def create_launch(payload: launch, response: Response) -> dict:
 
 
 # Update launch by id
-@router.put("")
-def update_launch(payload: launch, response: Response):
+@router.put("/{id}")
+def update_launch(id: int, payload: launch, response: Response):
 
 	try:
 		with get_conn() as conn:
@@ -94,7 +94,7 @@ def update_launch(payload: launch, response: Response):
 					"vehicle_id": payload.vehicle_id,
 					"launchpad_id": payload.launchpad_id,
 					"organisation_id": payload.organisation_id,
-					"id": payload.id
+					"id": id
 				}
 			)
 

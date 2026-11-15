@@ -2,7 +2,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class launch(BaseModel):
-	id: int | None = None
 	date: datetime
 	status: str | None = None
 	webcast_url: str | None = None

@@ -76,8 +76,8 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 
 
 # Update launchpad by id
-@router.put("")
-def update_launchpad(payload: launchpad, response: Response):
+@router.put("/{id}")
+def update_launchpad(id: int, payload: launchpad, response: Response):
 	try:
 		with get_conn() as conn:
 			conn.execute(
@@ -89,7 +89,7 @@ def update_launchpad(payload: launchpad, response: Response):
 					"status": payload.status,
 					"organisation_id": payload.organisation_id,
 					"location_id": payload.location_id,
-					"id": payload.id
+					"id": id
 				}
 			)
 

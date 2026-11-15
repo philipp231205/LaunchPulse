@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class launchpad(BaseModel):
-	id: int | None = None
 	name: str
 	longitude: float
 	latitude: float

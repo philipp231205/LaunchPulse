@@ -2,7 +2,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class vehicle(BaseModel):
-	id: int | None = None
 	name: str
 	family: str | None = None
 	height_m: float | None = None
