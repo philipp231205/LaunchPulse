@@ -134,13 +134,13 @@ def get_launches(response: Response) -> dict:
 # Endpoints to get 1 row with a given id
 
 # Gets row by id for organisations
-@app.get("/organisations/{organisation_id}")
-def get_organisations_by_id(organisation_id: int, response: Response) -> dict:
+@app.get("/organisations/{id}")
+def get_organisations_by_id(id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			row = conn.execute(
-				"SELECT * FROM organisations WHERE id = %s", (organisation_id,)
+				"SELECT * FROM organisations WHERE id = %s", (id,)
 			).fetchall()
 
 		response.status_code = status.HTTP_200_OK
@@ -151,13 +151,13 @@ def get_organisations_by_id(organisation_id: int, response: Response) -> dict:
 		return
 
 # Gets row by id for locations
-@app.get("/locations/{location_id}")
-def get_locations_by_id(location_id: int, response: Response) -> dict:
+@app.get("/locations/{id}")
+def get_locations_by_id(id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			row = conn.execute(
-				"SELECT * FROM locations WHERE id = %s", (location_id,)
+				"SELECT * FROM locations WHERE id = %s", (id,)
 			).fetchall()
 
 		response.status_code = status.HTTP_200_OK
@@ -168,13 +168,13 @@ def get_locations_by_id(location_id: int, response: Response) -> dict:
 		return
 
 # Gets row by id for launchpads
-@app.get("/launchpads/{launchpad_id}")
-def get_launchpads_by_id(launchpad_id: int, response: Response) -> dict:
+@app.get("/launchpads/{id}")
+def get_launchpads_by_id(id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			row = conn.execute(
-				"SELECT * FROM launchpads WHERE id = %s", (launchpad_id,)
+				"SELECT * FROM launchpads WHERE id = %s", (id,)
 			).fetchall()
 
 		response.status_code = status.HTTP_200_OK
@@ -185,13 +185,13 @@ def get_launchpads_by_id(launchpad_id: int, response: Response) -> dict:
 		return
 
 # Gets row by id for vehicles
-@app.get("/vehicles/{vehicle_id}")
-def get_vehicles_by_id(vehicle_id: int, response: Response) -> dict:
+@app.get("/vehicles/{id}")
+def get_vehicles_by_id(id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			row = conn.execute(
-				"SELECT * FROM vehicles WHERE id = %s", (vehicle_id,)
+				"SELECT * FROM vehicles WHERE id = %s", (id,)
 			).fetchall()
 
 		response.status_code = status.HTTP_200_OK
@@ -202,13 +202,13 @@ def get_vehicles_by_id(vehicle_id: int, response: Response) -> dict:
 		return
 
 # Gets row by id for launches
-@app.get("/launches/{launch_id}")
-def get_launches_by_id(launch_id: int, response: Response) -> dict:
+@app.get("/launches/{id}")
+def get_launches_by_id(id: int, response: Response) -> dict:
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			row = conn.execute(
-				"SELECT * FROM launches WHERE id = %s", (launch_id,)
+				"SELECT * FROM launches WHERE id = %s", (id,)
 			).fetchall()
 
 		response.status_code = status.HTTP_200_OK
@@ -222,7 +222,7 @@ def get_launches_by_id(launch_id: int, response: Response) -> dict:
 # Create endpoints for all tables
 
 # Creates a new organisation
-@app.post("/organisations/create")
+@app.post("/organisations")
 def create_organisation(payload: organisation, response: Response) -> dict:
 
 	try:
@@ -250,7 +250,7 @@ def create_organisation(payload: organisation, response: Response) -> dict:
 		return
 
 # Creates a new location
-@app.post("/locations/create")
+@app.post("/locations")
 def create_location(payload: location, response: Response) -> dict:
 
 	try:
@@ -276,7 +276,7 @@ def create_location(payload: location, response: Response) -> dict:
 		return
 
 # Creates a new launchpad
-@app.post("/launchpads/create")
+@app.post("/launchpads")
 def create_launchpad(payload: launchpad, response: Response) -> dict:
 
 	try:
@@ -305,7 +305,7 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 		return
 
 # Creates a new vehicle
-@app.post("/vehicles/create")
+@app.post("/vehicles")
 def create_vehicle(payload: vehicle, response: Response) -> dict:
 
 	try:
@@ -341,7 +341,7 @@ def create_vehicle(payload: vehicle, response: Response) -> dict:
 		return
 
 # Creates a new launch
-@app.post("/launches/create")
+@app.post("/launches")
 def create_launch(payload: launch, response: Response) -> dict:
 
 	try:
@@ -375,7 +375,7 @@ def create_launch(payload: launch, response: Response) -> dict:
 # Endpoints to update rows by id
 
 # Update organisation by id
-@app.put("/organisations/update")
+@app.put("/organisations")
 def update_organisation(payload: organisation, response: Response):
 
 	try:
@@ -400,7 +400,7 @@ def update_organisation(payload: organisation, response: Response):
 		return
 
 # Update location by id
-@app.put("/locations/update")
+@app.put("/locations")
 def update_location(payload: location, response: Response):
 
 	try:
@@ -423,7 +423,7 @@ def update_location(payload: location, response: Response):
 		return
 
 # Update launchpad by id
-@app.put("/launchpads/update")
+@app.put("/launchpads")
 def update_launchpad(payload: launchpad, response: Response):
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
@@ -448,7 +448,7 @@ def update_launchpad(payload: launchpad, response: Response):
 		return
 
 # Update vehicle by id
-@app.put("/vehicles/update")
+@app.put("/vehicles")
 def update_vehicle(payload: vehicle, response: Response):
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
@@ -480,7 +480,7 @@ def update_vehicle(payload: vehicle, response: Response):
 		return
 
 # Update launch by id
-@app.put("/launches/update")
+@app.put("/launches")
 def update_launch(payload: launch, response: Response):
 
 	try:
@@ -511,13 +511,13 @@ def update_launch(payload: launch, response: Response):
 # Endpoints to delete rows by id
 
 # Deletes organisation by id
-@app.delete("/organisations/delete/{organisation_id}")
-def delete_organisation(organisation_id: int, response: Response):
+@app.delete("/organisations/{id}")
+def delete_organisation(id: int, response: Response):
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"DELETE FROM organisations WHERE id = %s", (organisation_id,)
+				"DELETE FROM organisations WHERE id = %s", (id,)
 			)
 
 		response.status_code = status.HTTP_204_NO_CONTENT
@@ -528,13 +528,13 @@ def delete_organisation(organisation_id: int, response: Response):
 		return
 
 # Deletes location by id
-@app.delete("/locations/delete/{location_id}")
-def delete_location(location_id: int, response: Response):
+@app.delete("/locations/{id}")
+def delete_location(id: int, response: Response):
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"DELETE FROM locations WHERE id = %s", (location_id,)
+				"DELETE FROM locations WHERE id = %s", (id,)
 			)
 
 		response.status_code = status.HTTP_204_NO_CONTENT
@@ -545,13 +545,13 @@ def delete_location(location_id: int, response: Response):
 		return
 
 # Deletes launchpad by id
-@app.delete("/launchpads/delete/{launchpad_id}")
-def delete_launchpad(launchpad_id: int, response: Response):
+@app.delete("/launchpads/{id}")
+def delete_launchpad(id: int, response: Response):
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"DELETE FROM launchpads WHERE id = %s", (launchpad_id,)
+				"DELETE FROM launchpads WHERE id = %s", (id,)
 			)
 
 		response.status_code = status.HTTP_204_NO_CONTENT
@@ -562,13 +562,13 @@ def delete_launchpad(launchpad_id: int, response: Response):
 		return
 
 # Deletes vehicle by id
-@app.delete("/vehicles/delete/{vehicle_id}")
-def delete_vehicle(vehicle_id: int, response: Response):
+@app.delete("/vehicles/{id}")
+def delete_vehicle(id: int, response: Response):
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"DELETE FROM vehicles WHERE id = %s", (vehicle_id,)
+				"DELETE FROM vehicles WHERE id = %s", (id,)
 			)
 
 		response.status_code = status.HTTP_204_NO_CONTENT
@@ -579,13 +579,13 @@ def delete_vehicle(vehicle_id: int, response: Response):
 		return
 
 # Deletes launch by id
-@app.delete("/launches/delete/{launch_id}")
-def delete_launch(launch_id: int, response: Response):
+@app.delete("/launches/{id}")
+def delete_launch(id: int, response: Response):
 
 	try:
 		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
 			conn.execute(
-				"DELETE FROM launches WHERE id = %s", (launch_id,)
+				"DELETE FROM launches WHERE id = %s", (id,)
 			)
 
 		response.status_code = status.HTTP_204_NO_CONTENT
