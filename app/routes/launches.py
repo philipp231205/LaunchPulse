@@ -73,7 +73,7 @@ def update_launch(id: int, payload: launch):
 	try:
 		with get_conn() as conn:
 			cur = conn.execute(
-				"UPDATE launches SET date = %(date)s, status = %(status)s, webcast_url = %(webcast_url)s, mission = %(mission)s, payload = %(payload)s, vehicle_id = %(vehicle_id)s, launchpad_id = %(launchpad_id)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
+				"UPDATE launches SET date = %(date)s, status = %(status)s, webcast_url = %(webcast_url)s, mission = %(mission)s, payload = %(payload)s, vehicle_id = %(vehicle_id)s, launchpad_id = %(launchpad_id)s, organisation_id = %(organisation_id)s WHERE id = %(id)s RETURNING *",
 				{
 					"date": payload.date,
 					"status": payload.status,
@@ -90,7 +90,7 @@ def update_launch(id: int, payload: launch):
 		if cur.rowcount == 0:
 			raise HTTPException(status_code=404, detail="launch not found")
 
-		return
+		return cur.fetchone()
 
 	except ForeignKeyViolation:
 		raise HTTPException(status_code=404, detail="vehicle, launchpad or organisation not found")
@@ -105,5 +105,5 @@ def delete_launch(id: int):
 		)
 
 	if cur.rowcount == 0:
-		raise HTTPException(status_code=404, detail="launches not found")
+		raise HTTPException(status_code=404, detail="launch not found")
 	return

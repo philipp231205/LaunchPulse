@@ -70,7 +70,7 @@ def update_launchpad(id: int, payload: launchpad):
 	try:
 		with get_conn() as conn:
 			cur = conn.execute(
-				"UPDATE launchpads SET name = %(name)s, longitude = %(longitude)s, latitude = %(latitude)s, status = %(status)s, organisation_id = %(organisation_id)s, location_id = %(location_id)s WHERE id = %(id)s",
+				"UPDATE launchpads SET name = %(name)s, longitude = %(longitude)s, latitude = %(latitude)s, status = %(status)s, organisation_id = %(organisation_id)s, location_id = %(location_id)s WHERE id = %(id)s RETURNING *",
 				{
 					"name": payload.name,
 					"longitude": payload.longitude,
@@ -85,7 +85,7 @@ def update_launchpad(id: int, payload: launchpad):
 		if cur.rowcount == 0:
 			raise HTTPException(status_code=404, detail="launchpad not found")
 
-		return
+		return cur.fetchone()
 
 	except ForeignKeyViolation:
 		raise HTTPException(status_code=404, detail="organisation or location not found")

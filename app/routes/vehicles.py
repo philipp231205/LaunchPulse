@@ -76,7 +76,7 @@ def update_vehicle(id: int, payload: vehicle):
 	try:
 		with get_conn() as conn:
 			cur = conn.execute(
-				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
+				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organisation_id = %(organisation_id)s WHERE id = %(id)s RETURNING *",
 				{
 					"name": payload.name,
 					"family": payload.family,
@@ -98,7 +98,7 @@ def update_vehicle(id: int, payload: vehicle):
 		if cur.rowcount == 0:
 			raise HTTPException(status_code=404, detail="vehicle not found")
 
-		return
+		return cur.fetchone()
 
 	except ForeignKeyViolation:
 		raise HTTPException(status_code=404, detail="organisation not found")

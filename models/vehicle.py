@@ -14,4 +14,4 @@ class vehicle(BaseModel):
 	first_flight: datetime | None = None
 	thrust_kn: float | None = None
 	status: str | None = None
-	organisation_id: int | None = None
+	organisation_id: int

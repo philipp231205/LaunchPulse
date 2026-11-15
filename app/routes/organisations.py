@@ -64,7 +64,7 @@ def update_organisation(id: int, payload: organisation):
 
 	with get_conn() as conn:
 		cur = conn.execute(
-			"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
+			"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s RETURNING *",
 			{
 				"name": payload.name,
 				"country": payload.country,
@@ -78,7 +78,7 @@ def update_organisation(id: int, payload: organisation):
 	if cur.rowcount == 0:
 		raise HTTPException(status_code=404, detail="organisation not found")
 
-	return
+	return cur.fetchone()
 
 
 # Deletes organisation by id

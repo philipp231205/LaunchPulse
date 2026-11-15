@@ -9,4 +9,4 @@ class launch(BaseModel):
 	payload: str | None = None
 	vehicle_id: int
 	launchpad_id: int
-	organisation_id: int | None = None
+	organisation_id: int 

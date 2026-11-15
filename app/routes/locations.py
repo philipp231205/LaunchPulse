@@ -62,7 +62,7 @@ def update_location(id: int, payload: location):
 
 	with get_conn() as conn:
 		cur = conn.execute(
-			"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s",
+			"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s RETURNING *",
 			{
 				"name": payload.name,
 				"country": payload.country,
@@ -74,7 +74,7 @@ def update_location(id: int, payload: location):
 	if cur.rowcount == 0:
 		raise HTTPException(status_code=404, detail="location not found")
 
-	return
+	return cur.fetchone()
 
 # Deletes location by id
 @router.delete("/{id}", status_code=204)
