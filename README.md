@@ -34,9 +34,9 @@ Postgres is also exposed on host port `5433` if you want to inspect it with a lo
 | `GET` | `/health` | Health check |
 | `GET` | `/launches` | List all launches |
 | `GET` | `/launches/{id}` | Get one launch by id |
-| `POST` | `/launches/create` | Create a launch |
-| `PUT` | `/launches/update` | Update a launch |
-| `DELETE` | `/launches/delete/{id}` | Delete a launch |
+| `POST` | `/launches` | Create a launch |
+| `PUT` | `/launches/{id}` | Update a launch |
+| `DELETE` | `/launches/{id}` | Delete a launch |
 | `GET` | `/alerts/stream` | Live SSE stream of launch create events |
 
 A small demo page for the stream lives at `/static/alerts.html`.
