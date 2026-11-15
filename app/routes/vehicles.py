@@ -1,15 +1,8 @@
 from fastapi import APIRouter, Response, status
 
 from models.vehicle import vehicle
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_CONNECTION = os.getenv("DATABASE_URL")
-
-import psycopg
-from psycopg.rows import dict_row
+from app import broadcaster
+from app.db import get_conn
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
@@ -18,7 +11,7 @@ router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 def get_vehicles(response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			rows = conn.execute(
 				"SELECT * FROM vehicles ORDER BY name"
 			).fetchall()
@@ -38,7 +31,7 @@ def get_vehicles(response: Response) -> dict:
 def get_vehicles_by_id(id: int, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			row = conn.execute(
 				"SELECT * FROM vehicles WHERE id = %s", (id,)
 			).fetchall()
@@ -56,7 +49,7 @@ def get_vehicles_by_id(id: int, response: Response) -> dict:
 def create_vehicle(payload: vehicle, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			vehicle = conn.execute(
 				"INSERT INTO vehicles (name, family, height_m, diameter_m, mass_kg, payload_leo_kg, payload_gto_kg, payload_sso_kg, stages, first_flight, thrust_kn, status, organisation_id) VALUES (%(name)s, %(family)s, %(height_m)s, %(diameter_m)s, %(mass_kg)s, %(payload_leo_kg)s, %(payload_gto_kg)s, %(payload_sso_kg)s, %(stages)s, %(first_flight)s, %(thrust_kn)s, %(status)s, %(organisation_id)s) RETURNING *",
 				{
@@ -78,7 +71,7 @@ def create_vehicle(payload: vehicle, response: Response) -> dict:
 
 			conn.commit()
 
-		#broadcaster.publish(vehicle)
+		broadcaster.publish(vehicle)
 
 		response.status_code = status.HTTP_201_CREATED
 		return vehicle
@@ -92,7 +85,7 @@ def create_vehicle(payload: vehicle, response: Response) -> dict:
 @router.put("")
 def update_vehicle(payload: vehicle, response: Response):
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"UPDATE vehicles SET name = %(name)s, family = %(family)s, height_m = %(height_m)s, diameter_m = %(diameter_m)s, mass_kg = %(mass_kg)s, payload_leo_kg = %(payload_leo_kg)s, payload_gto_kg = %(payload_gto_kg)s, payload_sso_kg = %(payload_sso_kg)s, stages = %(stages)s, first_flight = %(first_flight)s, thrust_kn = %(thrust_kn)s, status = %(status)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
 				{
@@ -126,7 +119,7 @@ def update_vehicle(payload: vehicle, response: Response):
 def delete_vehicle(id: int, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"DELETE FROM vehicles WHERE id = %s", (id,)
 			)

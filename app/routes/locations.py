@@ -1,15 +1,8 @@
 from fastapi import APIRouter, Response, status
 
 from models.location import location
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_CONNECTION = os.getenv("DATABASE_URL")
-
-import psycopg
-from psycopg.rows import dict_row
+from app import broadcaster
+from app.db import get_conn
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
@@ -19,7 +12,7 @@ router = APIRouter(prefix="/locations", tags=["locations"])
 def get_locations(response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			rows = conn.execute(
 				"SELECT * FROM locations ORDER BY name"
 			).fetchall()
@@ -39,7 +32,7 @@ def get_locations(response: Response) -> dict:
 def get_locations_by_id(id: int, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			row = conn.execute(
 				"SELECT * FROM locations WHERE id = %s", (id,)
 			).fetchall()
@@ -57,7 +50,7 @@ def get_locations_by_id(id: int, response: Response) -> dict:
 def create_location(payload: location, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			location = conn.execute(
 				"INSERT INTO locations (name, country, region) VALUES (%(name)s, %(country)s, %(region)s) RETURNING *",
 				{
@@ -69,7 +62,7 @@ def create_location(payload: location, response: Response) -> dict:
 
 			conn.commit()
 
-		#broadcaster.publish(location)
+		broadcaster.publish(location)
 
 		response.status_code = status.HTTP_201_CREATED
 		return location
@@ -83,7 +76,7 @@ def create_location(payload: location, response: Response) -> dict:
 def update_location(payload: location, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s",
 				{
@@ -106,7 +99,7 @@ def update_location(payload: location, response: Response):
 def delete_location(id: int, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"DELETE FROM locations WHERE id = %s", (id,)
 			)

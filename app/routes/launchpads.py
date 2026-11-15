@@ -1,15 +1,8 @@
 from fastapi import APIRouter, Response, status
 
 from models.launchpad import launchpad
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_CONNECTION = os.getenv("DATABASE_URL")
-
-import psycopg
-from psycopg.rows import dict_row
+from app import broadcaster
+from app.db import get_conn
 
 router = APIRouter(prefix="/launchpads", tags=["launchpads"])
 
@@ -19,7 +12,7 @@ router = APIRouter(prefix="/launchpads", tags=["launchpads"])
 def get_launchpads(response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			rows = conn.execute(
 				"SELECT * FROM launchpads ORDER BY name"
 			).fetchall()
@@ -39,7 +32,7 @@ def get_launchpads(response: Response) -> dict:
 def get_launchpads_by_id(id: int, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			row = conn.execute(
 				"SELECT * FROM launchpads WHERE id = %s", (id,)
 			).fetchall()
@@ -57,7 +50,7 @@ def get_launchpads_by_id(id: int, response: Response) -> dict:
 def create_launchpad(payload: launchpad, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			launchpad = conn.execute(
 				"INSERT INTO launchpads (name, longitude, latitude, status, organisation_id, location_id) VALUES (%(name)s, %(longitude)s, %(latitude)s, %(status)s, %(organisation_id)s, %(location_id)s) RETURNING *",
 				{
@@ -72,7 +65,7 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 
 			conn.commit()
 
-		#broadcaster.publish(launchpad)
+		broadcaster.publish(launchpad)
 
 		response.status_code = status.HTTP_201_CREATED
 		return launchpad
@@ -86,7 +79,7 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 @router.put("")
 def update_launchpad(payload: launchpad, response: Response):
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"UPDATE launchpads SET name = %(name)s, longitude = %(longitude)s, latitude = %(latitude)s, status = %(status)s, organisation_id = %(organisation_id)s, location_id = %(location_id)s WHERE id = %(id)s",
 				{
@@ -113,7 +106,7 @@ def update_launchpad(payload: launchpad, response: Response):
 def delete_launchpad(id: int, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"DELETE FROM launchpads WHERE id = %s", (id,)
 			)

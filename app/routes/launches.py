@@ -1,17 +1,10 @@
 from fastapi import APIRouter, Response, status
 
 from models.launch import launch
+from app import broadcaster
+from app.db import get_conn
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_CONNECTION = os.getenv("DATABASE_URL")
-
-import psycopg
-from psycopg.rows import dict_row
-
-router = APIRouter(prefix="/launches", tags=["launch"])
+router = APIRouter(prefix="/launches", tags=["launches"])
 
 
 # Gets all rows in launches table
@@ -19,7 +12,7 @@ router = APIRouter(prefix="/launches", tags=["launch"])
 def get_launches(response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			rows = conn.execute(
 				"SELECT * FROM launches ORDER BY date"
 			).fetchall()
@@ -39,7 +32,7 @@ def get_launches(response: Response) -> dict:
 def get_launches_by_id(id: int, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			row = conn.execute(
 				"SELECT * FROM launches WHERE id = %s", (id,)
 			).fetchall()
@@ -57,7 +50,7 @@ def get_launches_by_id(id: int, response: Response) -> dict:
 def create_launch(payload: launch, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			launch = conn.execute(
 				"INSERT INTO launches (date, status, webcast_url, mission, payload, vehicle_id, launchpad_id, organisation_id) VALUES (%(date)s, %(status)s, %(webcast_url)s, %(mission)s, %(payload)s, %(vehicle_id)s, %(launchpad_id)s, %(organisation_id)s) RETURNING *",
 				{
@@ -74,7 +67,7 @@ def create_launch(payload: launch, response: Response) -> dict:
 
 			conn.commit()
 
-		#broadcaster.publish(launch)
+		broadcaster.publish(launch)
 
 		response.status_code = status.HTTP_201_CREATED
 		return launch
@@ -89,7 +82,7 @@ def create_launch(payload: launch, response: Response) -> dict:
 def update_launch(payload: launch, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"UPDATE launches SET date = %(date)s, status = %(status)s, webcast_url = %(webcast_url)s, mission = %(mission)s, payload = %(payload)s, vehicle_id = %(vehicle_id)s, launchpad_id = %(launchpad_id)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
 				{
@@ -118,7 +111,7 @@ def update_launch(payload: launch, response: Response):
 def delete_launch(id: int, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"DELETE FROM launches WHERE id = %s", (id,)
 			)

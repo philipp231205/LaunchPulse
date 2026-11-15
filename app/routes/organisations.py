@@ -1,15 +1,8 @@
 from fastapi import APIRouter, Response, status
 
 from models.organisation import organisation
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_CONNECTION = os.getenv("DATABASE_URL")
-
-import psycopg
-from psycopg.rows import dict_row
+from app import broadcaster
+from app.db import get_conn
 
 router = APIRouter(prefix="/organisations", tags=["organisations"])
 
@@ -18,7 +11,7 @@ router = APIRouter(prefix="/organisations", tags=["organisations"])
 def get_organisations(response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			rows = conn.execute(
 				"SELECT * FROM organisations ORDER BY name"
 			).fetchall()
@@ -38,7 +31,7 @@ def get_organisations(response: Response) -> dict:
 def get_organisations_by_id(id: int, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			row = conn.execute(
 				"SELECT * FROM organisations WHERE id = %s", (id,)
 			).fetchall()
@@ -56,7 +49,7 @@ def get_organisations_by_id(id: int, response: Response) -> dict:
 def create_organisation(payload: organisation, response: Response) -> dict:
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			organisation = conn.execute(
 				"INSERT INTO organisations (name, country, type, administrator, website) VALUES (%(name)s, %(country)s, %(type)s, %(administrator)s, %(website)s) RETURNING *",
 				{
@@ -70,7 +63,7 @@ def create_organisation(payload: organisation, response: Response) -> dict:
 
 			conn.commit()
 
-		#broadcaster.publish(organisation)
+		broadcaster.publish(organisation)
 
 		response.status_code = status.HTTP_201_CREATED
 		return organisation
@@ -85,7 +78,7 @@ def create_organisation(payload: organisation, response: Response) -> dict:
 def update_organisation(payload: organisation, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
 				{
@@ -111,7 +104,7 @@ def update_organisation(payload: organisation, response: Response):
 def delete_organisation(id: int, response: Response):
 
 	try:
-		with psycopg.connect(DB_CONNECTION, row_factory = dict_row) as conn:
+		with get_conn() as conn:
 			conn.execute(
 				"DELETE FROM organisations WHERE id = %s", (id,)
 			)
