@@ -1,30 +1,24 @@
-from fastapi import APIRouter, Response, status, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from models.launch import launch
 from app.broadcaster import broadcaster
-from app.db import get_conn
+from app.db import get_conn, ForeignKeyViolation
 
 router = APIRouter(prefix="/launches", tags=["launches"])
 
 
 # Gets all rows in launches table
 @router.get("")
-def get_launches(response: Response) -> dict:
+def get_launches() -> dict:
 
-	try:
-		with get_conn() as conn:
-			rows = conn.execute(
-				"SELECT * FROM launches ORDER BY date"
-			).fetchall()
+	with get_conn() as conn:
+		rows = conn.execute(
+			"SELECT * FROM launches ORDER BY date"
+		).fetchall()
 
-		result = {row["id"]: row for row in rows}
+	result = {row["id"]: row for row in rows}
 
-		response.status_code = status.HTTP_200_OK
-		return result
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return result
 
 
 # Gets row by id for launches
@@ -43,8 +37,8 @@ def get_launches_by_id(id: int) -> dict:
 
 
 # Creates a new launch
-@router.post("")
-def create_launch(payload: launch, response: Response) -> dict:
+@router.post("", status_code=201)
+def create_launch(payload: launch) -> dict:
 
 	try:
 		with get_conn() as conn:
@@ -66,21 +60,19 @@ def create_launch(payload: launch, response: Response) -> dict:
 
 		broadcaster.publish(launch)
 
-		response.status_code = status.HTTP_201_CREATED
 		return launch
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=404, detail="vehicle, launchpad or organisation not found")
 
 
 # Update launch by id
 @router.put("/{id}")
-def update_launch(id: int, payload: launch, response: Response):
+def update_launch(id: int, payload: launch):
 
 	try:
 		with get_conn() as conn:
-			conn.execute(
+			cur = conn.execute(
 				"UPDATE launches SET date = %(date)s, status = %(status)s, webcast_url = %(webcast_url)s, mission = %(mission)s, payload = %(payload)s, vehicle_id = %(vehicle_id)s, launchpad_id = %(launchpad_id)s, organisation_id = %(organisation_id)s WHERE id = %(id)s",
 				{
 					"date": payload.date,
@@ -95,27 +87,23 @@ def update_launch(id: int, payload: launch, response: Response):
 				}
 			)
 
-		response.status_code = status.HTTP_200_OK
+		if cur.rowcount == 0:
+			raise HTTPException(status_code=404, detail="launch not found")
+
 		return
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
-
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=404, detail="vehicle, launchpad or organisation not found")
 
 # Deletes launch by id
-@router.delete("/{id}")
-def delete_launch(id: int, response: Response):
+@router.delete("/{id}", status_code=204)
+def delete_launch(id: int):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"DELETE FROM launches WHERE id = %s", (id,)
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"DELETE FROM launches WHERE id = %s", (id,)
+		)
 
-		response.status_code = status.HTTP_204_NO_CONTENT
-		return
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="launches not found")
+	return

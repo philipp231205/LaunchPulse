@@ -1,30 +1,24 @@
-from fastapi import APIRouter, Response, status, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from models.launchpad import launchpad
 from app.broadcaster import broadcaster
-from app.db import get_conn
+from app.db import get_conn, ForeignKeyViolation
 
 router = APIRouter(prefix="/launchpads", tags=["launchpads"])
 
 
 # Gets all rows in launchpads table
 @router.get("")
-def get_launchpads(response: Response) -> dict:
+def get_launchpads() -> dict:
 
-	try:
-		with get_conn() as conn:
-			rows = conn.execute(
-				"SELECT * FROM launchpads ORDER BY name"
-			).fetchall()
+	with get_conn() as conn:
+		rows = conn.execute(
+			"SELECT * FROM launchpads ORDER BY name"
+		).fetchall()
 
-		result = {row["id"]: row for row in rows}
+	result = {row["id"]: row for row in rows}
 
-		response.status_code = status.HTTP_200_OK
-		return result
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return result
 
 
 # Gets row by id for launchpads
@@ -43,8 +37,8 @@ def get_launchpads_by_id(id: int) -> dict:
 
 
 # Creates a new launchpad
-@router.post("")
-def create_launchpad(payload: launchpad, response: Response) -> dict:
+@router.post("", status_code=201)
+def create_launchpad(payload: launchpad) -> dict:
 
 	try:
 		with get_conn() as conn:
@@ -64,20 +58,18 @@ def create_launchpad(payload: launchpad, response: Response) -> dict:
 
 		broadcaster.publish(launchpad)
 
-		response.status_code = status.HTTP_201_CREATED
 		return launchpad
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=404, detail="organisation or location not found")
 
 
 # Update launchpad by id
 @router.put("/{id}")
-def update_launchpad(id: int, payload: launchpad, response: Response):
+def update_launchpad(id: int, payload: launchpad):
 	try:
 		with get_conn() as conn:
-			conn.execute(
+			cur = conn.execute(
 				"UPDATE launchpads SET name = %(name)s, longitude = %(longitude)s, latitude = %(latitude)s, status = %(status)s, organisation_id = %(organisation_id)s, location_id = %(location_id)s WHERE id = %(id)s",
 				{
 					"name": payload.name,
@@ -90,27 +82,25 @@ def update_launchpad(id: int, payload: launchpad, response: Response):
 				}
 			)
 
-		response.status_code = status.HTTP_200_OK
+		if cur.rowcount == 0:
+			raise HTTPException(status_code=404, detail="launchpad not found")
+
 		return
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	except ForeignKeyViolation:
+		raise HTTPException(status_code=404, detail="organisation or location not found")
 
 
 # Deletes launchpad by id
-@router.delete("/{id}")
-def delete_launchpad(id: int, response: Response):
+@router.delete("/{id}", status_code=204)
+def delete_launchpad(id: int):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"DELETE FROM launchpads WHERE id = %s", (id,)
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"DELETE FROM launchpads WHERE id = %s", (id,)
+		)
 
-		response.status_code = status.HTTP_204_NO_CONTENT
-		return
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="launchpad not found")
+	
+	return

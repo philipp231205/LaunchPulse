@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, status, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from models.location import location
 from app.broadcaster import broadcaster
@@ -9,22 +9,16 @@ router = APIRouter(prefix="/locations", tags=["locations"])
 
 # Gets all rows in locations table
 @router.get("")
-def get_locations(response: Response) -> dict:
+def get_locations() -> dict:
 
-	try:
-		with get_conn() as conn:
-			rows = conn.execute(
-				"SELECT * FROM locations ORDER BY name"
-			).fetchall()
+	with get_conn() as conn:
+		rows = conn.execute(
+			"SELECT * FROM locations ORDER BY name"
+		).fetchall()
 
-		result = {row["id"]: row for row in rows}
+	result = {row["id"]: row for row in rows}
 
-		response.status_code = status.HTTP_200_OK
-		return result
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return result
 
 
 # Gets row by id for locations
@@ -43,67 +37,55 @@ def get_locations_by_id(id: int) -> dict:
 
 
 # Creates a new location
-@router.post("")
-def create_location(payload: location, response: Response) -> dict:
+@router.post("", status_code=201)
+def create_location(payload: location) -> dict:
 
-	try:
-		with get_conn() as conn:
-			location = conn.execute(
-				"INSERT INTO locations (name, country, region) VALUES (%(name)s, %(country)s, %(region)s) RETURNING *",
-				{
-					"name": payload.name,
-					"country": payload.country,
-					"region": payload.region
-				}
-			).fetchone()
+	with get_conn() as conn:
+		location = conn.execute(
+			"INSERT INTO locations (name, country, region) VALUES (%(name)s, %(country)s, %(region)s) RETURNING *",
+			{
+				"name": payload.name,
+				"country": payload.country,
+				"region": payload.region
+			}
+		).fetchone()
 
-			conn.commit()
+		conn.commit()
 
-		broadcaster.publish(location)
+	broadcaster.publish(location)
 
-		response.status_code = status.HTTP_201_CREATED
-		return location
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return location
 
 # Update location by id
 @router.put("/{id}")
-def update_location(id: int, payload: location, response: Response):
+def update_location(id: int, payload: location):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s",
-				{
-					"name": payload.name,
-					"country": payload.country,
-					"region": payload.region,
-					"id": id
-				}
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"UPDATE locations SET name = %(name)s, country = %(country)s, region = %(region)s WHERE id = %(id)s",
+			{
+				"name": payload.name,
+				"country": payload.country,
+				"region": payload.region,
+				"id": id
+			}
+		)
 
-		response.status_code = status.HTTP_200_OK
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="location not found")
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return
 
 # Deletes location by id
-@router.delete("/{id}")
-def delete_location(id: int, response: Response):
+@router.delete("/{id}", status_code=204)
+def delete_location(id: int):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"DELETE FROM locations WHERE id = %s", (id,)
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"DELETE FROM locations WHERE id = %s", (id,)
+		)
 
-		response.status_code = status.HTTP_204_NO_CONTENT
-		return
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="location not found")
+	
+	return

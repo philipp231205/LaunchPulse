@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, status, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from models.organisation import organisation
 from app.broadcaster import broadcaster
@@ -8,22 +8,16 @@ router = APIRouter(prefix="/organisations", tags=["organisations"])
 
 # Gets all rows in organisations table
 @router.get("")
-def get_organisations(response: Response) -> dict:
+def get_organisations() -> dict:
 
-	try:
-		with get_conn() as conn:
-			rows = conn.execute(
-				"SELECT * FROM organisations ORDER BY name"
-			).fetchall()
+	with get_conn() as conn:
+		rows = conn.execute(
+			"SELECT * FROM organisations ORDER BY name"
+		).fetchall()
 
-		result = {row["id"]: row for row in rows}
+	result = {row["id"]: row for row in rows}
 
-		response.status_code = status.HTTP_200_OK
-		return result
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return result
 
 
 # Gets row by id for organisations
@@ -42,73 +36,61 @@ def get_organisations_by_id(id: int) -> dict:
 
 
 # Creates a new organisation
-@router.post("")
-def create_organisation(payload: organisation, response: Response) -> dict:
+@router.post("", status_code=201)
+def create_organisation(payload: organisation) -> dict:
 
-	try:
-		with get_conn() as conn:
-			organisation = conn.execute(
-				"INSERT INTO organisations (name, country, type, administrator, website) VALUES (%(name)s, %(country)s, %(type)s, %(administrator)s, %(website)s) RETURNING *",
-				{
-					"name": payload.name,
-					"country": payload.country,
-					"type": payload.type,
-					"administrator": payload.administrator,
-					"website": payload.website
-				}
-			).fetchone()
+	with get_conn() as conn:
+		organisation = conn.execute(
+			"INSERT INTO organisations (name, country, type, administrator, website) VALUES (%(name)s, %(country)s, %(type)s, %(administrator)s, %(website)s) RETURNING *",
+			{
+				"name": payload.name,
+				"country": payload.country,
+				"type": payload.type,
+				"administrator": payload.administrator,
+				"website": payload.website
+			}
+		).fetchone()
 
-			conn.commit()
+		conn.commit()
 
-		broadcaster.publish(organisation)
+	broadcaster.publish(organisation)
 
-		response.status_code = status.HTTP_201_CREATED
-		return organisation
-
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return organisation
 
 
 # Update organisation by id
 @router.put("/{id}")
-def update_organisation(id: int, payload: organisation, response: Response):
+def update_organisation(id: int, payload: organisation):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
-				{
-					"name": payload.name,
-					"country": payload.country,
-					"type": payload.type,
-					"administrator": payload.administrator,
-					"website": payload.website,
-					"id": id
-				}
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"UPDATE organisations SET name = %(name)s, country = %(country)s, type = %(type)s, administrator = %(administrator)s, website = %(website)s WHERE id = %(id)s",
+			{
+				"name": payload.name,
+				"country": payload.country,
+				"type": payload.type,
+				"administrator": payload.administrator,
+				"website": payload.website,
+				"id": id
+			}
+		)
 
-		response.status_code = status.HTTP_200_OK
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="organisation not found")
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return
 
 
 # Deletes organisation by id
-@router.delete("/{id}")
-def delete_organisation(id: int, response: Response):
+@router.delete("/{id}", status_code=204)
+def delete_organisation(id: int):
 
-	try:
-		with get_conn() as conn:
-			conn.execute(
-				"DELETE FROM organisations WHERE id = %s", (id,)
-			)
+	with get_conn() as conn:
+		cur = conn.execute(
+			"DELETE FROM organisations WHERE id = %s", (id,)
+		)
 
-		response.status_code = status.HTTP_204_NO_CONTENT
-		return
+	if cur.rowcount == 0:
+		raise HTTPException(status_code=404, detail="organisation not found")
 
-	except Exception:
-		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		return
+	return

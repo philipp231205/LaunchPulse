@@ -1,6 +1,7 @@
 import os
 import psycopg
 from psycopg.rows import dict_row
+from psycopg.errors import ForeignKeyViolation
 from dotenv import load_dotenv
 
 load_dotenv()
