@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 
 from models.vehicle import vehicle
@@ -13,8 +13,8 @@ def get_vehicles(
 	organisation_id: Optional[int] = None,
 	status: Optional[str] = None,
 	family: Optional[str] = None,
-	limit: Optional[int] = 50,
-	offset: Optional[int] = 0,
+	limit: int = Query(50, ge=1, le=200),
+	offset: int = Query(0, ge=0),
 ) -> dict:
 
 	conditions = []
@@ -28,10 +28,10 @@ def get_vehicles(
 		params["status"] = status
 	if family is not None:
 		conditions.append("family = %(family)s")
-		params["familiy"] = family
+		params["family"] = family
 
 	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
+	sql = f"SELECT * FROM vehicles {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
 		rows = conn.execute(sql, params).fetchall()

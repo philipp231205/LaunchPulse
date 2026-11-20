@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from datetime import datetime
 
@@ -18,8 +18,8 @@ def get_launches(
 	vehicle_id: Optional[int] = None,
 	from_date: Optional[datetime] = None,
 	to_date: Optional[datetime] = None,
-	limit: Optional[int] = 50,
-	offset: Optional[int] = 0,
+	limit: int = Query(50, ge=1, le=200),
+	offset: int = Query(0, ge=0),
 ) -> dict:
 
 	conditions = []

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 
 from models.launchpad import launchpad
@@ -11,19 +11,19 @@ router = APIRouter(prefix="/launchpads", tags=["launchpads"])
 # Gets all rows in launchpads table
 @router.get("")
 def get_launchpads(
-	organsiation_id: Optional[int] = None,
+	organisation_id: Optional[int] = None,
 	location_id: Optional[int] = None,
 	status: Optional[str] = None,
-	limit: Optional[int] = 50,
-	offset: Optional[int] = 0,
+	limit: int = Query(50, ge=1, le=200),
+	offset: int = Query(0, ge=0),
 ) -> dict:
 
 	conditions = []
 	params = {"limit": limit, "offset": offset}
 
-	if organsiation_id is not None:
+	if organisation_id is not None:
 		conditions.append("organisation_id = %(organisation_id)s")
-		params["organisation_id"] = organsiation_id
+		params["organisation_id"] = organisation_id
 	if location_id is not None:
 		conditions.append("location_id = %(location_id)s")
 		params["location_id"] = location_id
@@ -32,7 +32,7 @@ def get_launchpads(
 		params["status"] = status
 
 	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
+	sql = f"SELECT * FROM launchpads {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
 		rows = conn.execute(sql, params).fetchall()

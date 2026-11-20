@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 
 from models.location import location
@@ -12,8 +12,8 @@ router = APIRouter(prefix="/locations", tags=["locations"])
 @router.get("")
 def get_locations(
 	country: Optional[str] = None,
-	limit: Optional[int] = 50,
-	offset: Optional[int] = 0,
+	limit: int = Query(50, ge=1, le=200),
+	offset: int = Query(0, ge=0),
 ) -> dict:
 
 	conditions = []
@@ -24,7 +24,7 @@ def get_locations(
 		params["country"] = country
 
 	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
+	sql = f"SELECT * FROM locations {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
 		rows = conn.execute(sql, params).fetchall()
