@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+from typing import Optional
+from datetime import datetime
 
 from models.launch import launch
 from app.broadcaster import broadcaster
@@ -9,16 +11,46 @@ router = APIRouter(prefix="/launches", tags=["launches"])
 
 # Gets all rows in launches table
 @router.get("")
-def get_launches() -> dict:
+def get_launches(
+	status: Optional[str] = None,
+	organisation_id: Optional[int] = None,
+	location_id: Optional[int] = None,
+	vehicle_id: Optional[int] = None,
+	from_date: Optional[datetime] = None,
+	to_date: Optional[datetime] = None,
+	limit: Optional[int] = 50,
+	offset: Optional[int] = 0,
+) -> dict:
+
+	conditions = []
+	params = {"limit": limit, "offset": offset}
+
+	if status is not None:
+		conditions.append("status = %(status)s")
+		params["status"] = status
+	if organisation_id is not None:
+		conditions.append("organisation_id = %(organisation_id)s")
+		params["organisation_id"] = organisation_id
+	if location_id is not None:
+		conditions.append("location_id = %(location_id)s")
+		params["location_id"] = location_id
+	if vehicle_id is not None:
+		conditions.append("vehicle_id = %(vehicle_id)s")
+		params["vehicle_id"] = vehicle_id
+	if from_date is not None:
+		conditions.append("date >= %(from_date)s")
+		params["from_date"] = from_date
+	if to_date is not None:
+		conditions.append("date <= %(to_date)s")
+		params["to_date"] = to_date
+
+	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+	sql = f"SELECT * FROM launches {where} ORDER BY date LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
-		rows = conn.execute(
-			"SELECT * FROM launches ORDER BY date"
-		).fetchall()
+		rows = conn.execute(sql, params).fetchall()
 
-	result = {row["id"]: row for row in rows}
-
-	return result
+	return {row["id"]: row for row in rows}
 
 
 # Gets row by id for launches
