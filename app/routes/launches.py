@@ -14,7 +14,7 @@ router = APIRouter(prefix="/launches", tags=["launches"])
 def get_launches(
 	status: Optional[str] = None,
 	organisation_id: Optional[int] = None,
-	location_id: Optional[int] = None,
+	launchpad_id: Optional[int] = None,
 	vehicle_id: Optional[int] = None,
 	from_date: Optional[datetime] = None,
 	to_date: Optional[datetime] = None,
@@ -31,9 +31,9 @@ def get_launches(
 	if organisation_id is not None:
 		conditions.append("organisation_id = %(organisation_id)s")
 		params["organisation_id"] = organisation_id
-	if location_id is not None:
-		conditions.append("location_id = %(location_id)s")
-		params["location_id"] = location_id
+	if launchpad_id is not None:
+		conditions.append("launchpad_id = %(launchpad_id)s")
+		params["launchpad_id"] = launchpad_id
 	if vehicle_id is not None:
 		conditions.append("vehicle_id = %(vehicle_id)s")
 		params["vehicle_id"] = vehicle_id

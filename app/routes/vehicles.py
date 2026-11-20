@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from typing import Optional
 
 from models.vehicle import vehicle
 from app.broadcaster import broadcaster
@@ -8,16 +9,34 @@ router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
 # Gets all rows in vehicles table
 @router.get("")
-def get_vehicles() -> dict:
+def get_vehicles(
+	organisation_id: Optional[int] = None,
+	status: Optional[str] = None,
+	family: Optional[str] = None,
+	limit: Optional[int] = 50,
+	offset: Optional[int] = 0,
+) -> dict:
+
+	conditions = []
+	params = {"limit": limit, "offset": offset}
+
+	if organisation_id is not None:
+		conditions.append("organisation_id = %(organisation_id)s")
+		params["organisation_id"] = organisation_id
+	if status is not None:
+		conditions.append("status = %(status)s")
+		params["status"] = status
+	if family is not None:
+		conditions.append("family = %(family)s")
+		params["familiy"] = family
+
+	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
-		rows = conn.execute(
-			"SELECT * FROM vehicles ORDER BY name"
-		).fetchall()
+		rows = conn.execute(sql, params).fetchall()
 
-	result = {row["id"]: row for row in rows}
-
-	return result
+	return {row["id"]: row for row in rows}
 
 
 # Gets row by id for vehicles

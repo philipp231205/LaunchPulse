@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from typing import Optional
 
 from models.organisation import organisation
 from app.broadcaster import broadcaster
@@ -8,16 +9,30 @@ router = APIRouter(prefix="/organisations", tags=["organisations"])
 
 # Gets all rows in organisations table
 @router.get("")
-def get_organisations() -> dict:
+def get_organisations(
+	country: Optional[str] = None,
+	type: Optional[str] = None,
+	limit: Optional[int] = 50,
+	offset: Optional[int] = 0,
+) -> dict:
+
+	conditions = []
+	params = {"limit": limit, "offset": offset}
+
+	if country is not None:
+		conditions.append("country = %(country)s")
+		params["country"] = country
+	if type is not None:
+		conditions.append("type = %(type)s")
+		params["type"] = type
+
+	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
-		rows = conn.execute(
-			"SELECT * FROM organisations ORDER BY name"
-		).fetchall()
+		rows = conn.execute(sql, params).fetchall()
 
-	result = {row["id"]: row for row in rows}
-
-	return result
+	return {row["id"]: row for row in rows}
 
 
 # Gets row by id for organisations

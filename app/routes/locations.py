@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from typing import Optional
 
 from models.location import location
 from app.broadcaster import broadcaster
@@ -9,16 +10,26 @@ router = APIRouter(prefix="/locations", tags=["locations"])
 
 # Gets all rows in locations table
 @router.get("")
-def get_locations() -> dict:
+def get_locations(
+	country: Optional[str] = None,
+	limit: Optional[int] = 50,
+	offset: Optional[int] = 0,
+) -> dict:
+
+	conditions = []
+	params = {"limit": limit, "offset": offset}
+
+	if country is not None:
+		conditions.append("country = %(country)s")
+		params["country"] = country
+
+	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
-		rows = conn.execute(
-			"SELECT * FROM locations ORDER BY name"
-		).fetchall()
+		rows = conn.execute(sql, params).fetchall()
 
-	result = {row["id"]: row for row in rows}
-
-	return result
+	return {row["id"]: row for row in rows}
 
 
 # Gets row by id for locations

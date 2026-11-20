@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from typing import Optional
 
 from models.launchpad import launchpad
 from app.broadcaster import broadcaster
@@ -9,16 +10,34 @@ router = APIRouter(prefix="/launchpads", tags=["launchpads"])
 
 # Gets all rows in launchpads table
 @router.get("")
-def get_launchpads() -> dict:
+def get_launchpads(
+	organsiation_id: Optional[int] = None,
+	location_id: Optional[int] = None,
+	status: Optional[str] = None,
+	limit: Optional[int] = 50,
+	offset: Optional[int] = 0,
+) -> dict:
+
+	conditions = []
+	params = {"limit": limit, "offset": offset}
+
+	if organsiation_id is not None:
+		conditions.append("organisation_id = %(organisation_id)s")
+		params["organisation_id"] = organsiation_id
+	if location_id is not None:
+		conditions.append("location_id = %(location_id)s")
+		params["location_id"] = location_id
+	if status is not None:
+		conditions.append("status = %(status)s")
+		params["status"] = status
+
+	where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+	sql = f"SELECT * FROM launches {where} ORDER BY name LIMIT %(limit)s OFFSET %(offset)s"
 
 	with get_conn() as conn:
-		rows = conn.execute(
-			"SELECT * FROM launchpads ORDER BY name"
-		).fetchall()
+		rows = conn.execute(sql, params).fetchall()
 
-	result = {row["id"]: row for row in rows}
-
-	return result
+	return {row["id"]: row for row in rows}
 
 
 # Gets row by id for launchpads
