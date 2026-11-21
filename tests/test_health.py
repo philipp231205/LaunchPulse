@@ -1,9 +1,5 @@
-from fastapi.testclient import TestClient
-
-from main import app
-
-client = TestClient(app)
+import conftest
 
 def test_health_returns_up():
-	response = client.get("/health")
+	response = conftest.client.get("/health")
 	assert response.status_code == 200
