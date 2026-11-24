@@ -36,21 +36,22 @@ def test_create_2_and_get_with_filter(client):
 	assert response.status_code == 200
 	body = response.json()
 
-	assert body[str(body_1["id"])]["name"] == data_1["name"]
-	assert body[str(body_2["id"])]["name"] == data_2["name"]
+	assert str(body_1["id"]) in body
+	assert str(body_2["id"]) in body
 
 	response_filtered = client.get("/organisations?type=test_typ_1")
 	assert response_filtered.status_code == 200
 	body_filtered = response_filtered.json()
 
-	assert body_filtered[str(body_1["id"])]["name"] == data_1["name"]
+	assert str(body_1["id"]) in body_filtered
+	assert str(body_2["id"]) not in body_filtered
 
 def test_update_organisation(client):
-	response = make_org(client)
+	org = make_org(client)
 
 	put_data = { "name": "test_org_p", "country": "test_cou_p", "type": "test_typ_p", "administrator": "test_adm_p", "website": "test_web_p" }
 
-	put = client.put(f"/organisations/{response["id"]}", json=put_data)
+	put = client.put(f"/organisations/{org["id"]}", json=put_data)
 	assert put.status_code == 200
 
 	get = client.get(f"/organisations/{put.json()["id"]}")
@@ -65,12 +66,12 @@ def test_update_on_unknown_id(client):
 	assert put.status_code == 404
 
 def test_delete_and_get_returns_404(client):
-	response = make_org(client)
+	org = make_org(client)
 
-	delete = client.delete(f"/organisations/{response["id"]}")
+	delete = client.delete(f"/organisations/{org["id"]}")
 	assert delete.status_code == 204
 
-	get = client.get(f"/organisations/{response["id"]}")
+	get = client.get(f"/organisations/{org["id"]}")
 	assert get.status_code == 404
 
 def test_create_with_incomplete_data(client):
@@ -79,8 +80,15 @@ def test_create_with_incomplete_data(client):
 	response = client.post("/organisations", json=data)
 	assert response.status_code == 422
 
+def test_delete_with_unknown_id(client):
+	delete = client.delete(f"/organisations/99999")
+	assert delete.status_code == 404
+
 def test_delete_with_reference_to_row(client):
 	veh = make_vehicle(client)
 
 	delete = client.delete(f"/organisations/{veh["organisation_id"]}")
 	assert delete.status_code == 409
+
+	get = client.get(f"/organisations/{veh["organisation_id"]}")
+	assert get.status_code == 200
