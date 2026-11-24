@@ -27,6 +27,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://launchpulse:devpassword@127.0.0.1:5432/launchpulse
+      TEST_DATABASE_URL: postgresql://launchpulse:devpassword@localhost:5433/launchpulse_test
 
     steps:
       - name: Check out the code
