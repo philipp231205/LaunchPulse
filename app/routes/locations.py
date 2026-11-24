@@ -63,8 +63,6 @@ def create_location(payload: location) -> dict:
 
 		conn.commit()
 
-	broadcaster.publish(location)
-
 	return location
 
 # Update location by id

@@ -75,8 +75,6 @@ def create_launchpad(payload: launchpad) -> dict:
 
 			conn.commit()
 
-		broadcaster.publish(launchpad)
-
 		return launchpad
 
 	except ForeignKeyViolation:

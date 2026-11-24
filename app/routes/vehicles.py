@@ -81,8 +81,6 @@ def create_vehicle(payload: vehicle) -> dict:
 
 			conn.commit()
 
-		broadcaster.publish(vehicle)
-
 		return vehicle
 
 	except ForeignKeyViolation:

@@ -68,8 +68,6 @@ def create_organisation(payload: organisation) -> dict:
 
 		conn.commit()
 
-	broadcaster.publish(organisation)
-
 	return organisation
 
 
